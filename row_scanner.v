@@ -23,6 +23,7 @@
 module row_scanner(
     input wire clk,
     input wire rst_n,
+    input wire en,
     output reg [1:0]row_idx,
     output wire [3:0]row_out
     );
@@ -32,7 +33,7 @@ always @(posedge clk or negedge rst_n)
 begin
    if(!rst_n)
     row_idx<=2'b0;
-   else
+   else if(en)
     row_idx<=row_idx +1;
 end
 
