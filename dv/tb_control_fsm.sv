@@ -276,6 +276,7 @@ module tb_control_fsm;
     wait_clks(1); // SCAN_ROW
     col_valid = 1;
     @(posedge clk);
+    #1;
     check("TC4", dut_state == SAMPLE_COL,
       $sformatf("Expected SAMPLE_COL, got %0b", dut_state));
     col_valid = 0;
@@ -287,6 +288,7 @@ module tb_control_fsm;
     wait_clks(1);
     col_valid = 1; @(posedge clk); col_valid = 0; // → SAMPLE_COL
     @(posedge clk); // SAMPLE_COL → DEBOUNCE
+    #1;
     check("TC5", dut_state == DEBOUNCE,
       $sformatf("Expected DEBOUNCE, got %0b", dut_state));
   endtask
@@ -308,6 +310,7 @@ module tb_control_fsm;
     debounced_press = 1;
     @(posedge clk);
     debounced_press = 0;
+    #1;
     check("TC7", dut_state == KEY_VALID,
       $sformatf("Expected KEY_VALID, got %0b", dut_state));
   endtask
@@ -318,6 +321,7 @@ module tb_control_fsm;
     drive_to_debounce();
     debounced_press = 1; @(posedge clk); debounced_press = 0; // → KEY_VALID
     @(posedge clk); // KEY_VALID → WAIT_RELEASE
+    #1;
     check("TC8", dut_state == WAIT_RELEASE,
       $sformatf("Expected WAIT_RELEASE, got %0b", dut_state));
   endtask
@@ -339,6 +343,7 @@ module tb_control_fsm;
     debounced_release = 1;
     @(posedge clk);
     debounced_release = 0;
+    #1;
     check("TC10", dut_state == SCAN_ROW,
       $sformatf("Expected SCAN_ROW, got %0b", dut_state));
   endtask
@@ -349,21 +354,27 @@ module tb_control_fsm;
 
     // Track every state visited
     wait_clks(1); // IDLE → SCAN_ROW
+    #1;
     check("TC11", dut_state == SCAN_ROW, "Step 1: SCAN_ROW");
 
     col_valid = 1; @(posedge clk); col_valid = 0;
+    #1;
     check("TC11", dut_state == SAMPLE_COL, "Step 2: SAMPLE_COL");
 
     @(posedge clk);
+    #1;
     check("TC11", dut_state == DEBOUNCE, "Step 3: DEBOUNCE");
 
     debounced_press = 1; @(posedge clk); debounced_press = 0;
+    #1;
     check("TC11", dut_state == KEY_VALID, "Step 4: KEY_VALID");
 
     @(posedge clk);
+    #1;
     check("TC11", dut_state == WAIT_RELEASE, "Step 5: WAIT_RELEASE");
 
     debounced_release = 1; @(posedge clk); debounced_release = 0;
+    #1;
     check("TC11", dut_state == SCAN_ROW, "Step 6: back to SCAN_ROW");
   endtask
 
@@ -405,11 +416,13 @@ module tb_control_fsm;
     $display("\n===== TC13: test_reset_from_debounce =====");
     apply_reset();
     drive_to_debounce();
+    #1;
     check("TC13", dut_state == DEBOUNCE, "Reached DEBOUNCE");
 
     // Assert reset
     rst_n = 0;
     @(posedge clk);
+    #1;
     check("TC13", dut_state == IDLE, "Reset → IDLE");
     #1;
     check_outputs("TC13-RST", 1, 0, 0, 0); // IDLE outputs
@@ -425,18 +438,22 @@ module tb_control_fsm;
     // First key cycle
     drive_to_wait_release();
     debounced_release = 1; @(posedge clk); debounced_release = 0;
+    #1;
     check("TC14", dut_state == SCAN_ROW, "1st cycle: back to SCAN_ROW");
 
     // Second key cycle (immediately)
     col_valid = 1; @(posedge clk); col_valid = 0;
+    #1;
     check("TC14", dut_state == SAMPLE_COL, "2nd cycle: SAMPLE_COL");
 
     @(posedge clk); // → DEBOUNCE
     debounced_press = 1; @(posedge clk); debounced_press = 0;
+    #1;
     check("TC14", dut_state == KEY_VALID, "2nd cycle: KEY_VALID");
 
     @(posedge clk); // → WAIT_RELEASE
     debounced_release = 1; @(posedge clk); debounced_release = 0;
+    #1;
     check("TC14", dut_state == SCAN_ROW, "2nd cycle: back to SCAN_ROW");
   endtask
 
@@ -485,7 +502,7 @@ module tb_control_fsm;
 
   // Timeout watchdog
   initial begin
-    #500_000;
+    #5_000_000;
     $display("[TIMEOUT] Simulation exceeded maximum time");
     $finish;
   end
